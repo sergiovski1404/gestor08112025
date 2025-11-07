@@ -21,6 +21,7 @@ import type {
     MessageStatus
 } from './types';
 import { analyzeDataWithGemini } from './services/geminiService';
+import { getFrequencies as getFrequenciesFromSupabase, upsertFrequency as upsertFrequencyToSupabase, supabaseEnabled } from './services/frequencyService';
 import { ICONS, WORKSHOP_COLORS, WORKSHOP_COLOR_MAP, AGE_CLASSIFICATIONS, PHYSICAL_FILE_LOCATIONS } from './constants';
 import { syncWithMcp } from './services/mcpService';
 import type { McpSyncData } from './services/mcpService';
@@ -3040,8 +3041,12 @@ const WorkshopFrequencyModal: React.FC<{
     
     const handleSave = () => {
         if (!workshop) return;
-        Object.entries(attendanceChanges).forEach(([date, attendanceRecord]) => {
-            const finalAttendance = { ...(initialFrequenciesMap[date] || {}), ...attendanceRecord };
+        const changesEntries = Object.entries(attendanceChanges) as Array<[string, Record<string, AttendanceStatus>]>;
+        changesEntries.forEach(([date, attendanceRecord]) => {
+            const finalAttendance: Record<string, AttendanceStatus> = {
+                ...(initialFrequenciesMap[date] ?? {}),
+                ...attendanceRecord,
+            };
             onSave(workshop.id, date, finalAttendance);
         });
         onClose();
@@ -3940,7 +3945,7 @@ const AppContent = () => {
         addToast({ type: 'info', title: 'Oficina Removida', message: 'A oficina foi excluída.' });
     };
     
-    const handleSaveFrequency = (workshopId: string, date: string, attendance: Record<string, AttendanceStatus>) => {
+    const handleSaveFrequency = async (workshopId: string, date: string, attendance: Record<string, AttendanceStatus>) => {
         setFrequencies(prev => {
             const index = prev.findIndex(f => f.workshopId === workshopId && f.date === date);
             if (index > -1) {
@@ -3951,6 +3956,9 @@ const AppContent = () => {
                 return [...prev, { workshopId, date, attendance }];
             }
         });
+        if (supabaseEnabled) {
+            await upsertFrequencyToSupabase(workshopId, date, attendance);
+        }
         addToast({ type: 'success', title: 'Frequência Salva', message: `Frequência para ${new Date(date + 'T00:00:00').toLocaleDateString('pt-BR')} foi salva.` });
     };
     

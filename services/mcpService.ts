@@ -1,4 +1,4 @@
-import type { Beneficiary, Frequency, Workshop, Educator } from './types';
+import type { Beneficiary, Frequency, Workshop, Educator } from '../types';
 
 export interface McpSyncData {
     beneficiaries: Beneficiary[];

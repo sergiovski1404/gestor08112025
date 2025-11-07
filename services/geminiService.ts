@@ -1,14 +1,15 @@
 
 import { GoogleGenAI } from "@google/genai";
 
-// Ensure the API key is available in the environment variables
-const API_KEY = process.env.API_KEY;
+// Vite browser env vars must use import.meta.env with VITE_ prefix
+const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY as string | undefined;
 
-if (!API_KEY) {
-    console.error("API_KEY for GoogleGenAI is not set in environment variables.");
+let ai: GoogleGenAI | null = null;
+if (API_KEY) {
+    ai = new GoogleGenAI({ apiKey: API_KEY });
+} else {
+    console.warn("VITE_GOOGLE_API_KEY is not set; Gemini features are disabled.");
 }
-
-const ai = new GoogleGenAI({ apiKey: API_KEY! });
 
 /**
  * Analyzes report data using the Gemini API.
@@ -16,8 +17,9 @@ const ai = new GoogleGenAI({ apiKey: API_KEY! });
  * @returns A promise that resolves to the AI-generated analysis as a string.
  */
 export async function analyzeDataWithGemini(reportData: string): Promise<string> {
-    if (!API_KEY) {
-        return Promise.reject("API key is not configured. Please set the API_KEY environment variable.");
+    if (!ai) {
+        // Provide a graceful fallback to avoid breaking the UI
+        return "[Análise IA desativada] Configure VITE_GOOGLE_API_KEY para habilitar o Gemini.";
     }
     
     const model = 'gemini-2.5-flash';

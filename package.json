@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "setup:supabase": "node ./scripts/setupSupabase.cjs"
   },
   "dependencies": {
     "@google/genai": "^1.15.0",
@@ -17,6 +18,8 @@
   "devDependencies": {
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "dotenv": "^16.4.5",
+    "pg": "^8.13.1",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }

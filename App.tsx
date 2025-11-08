@@ -21,6 +21,7 @@ import type {
     MessageStatus
 } from './types';
 import { analyzeDataWithGemini } from './services/geminiService';
+import supabase, { isSupabaseConfigured } from './services/supabaseClient';
 import { getFrequencies as getFrequenciesFromSupabase, upsertFrequency as upsertFrequencyToSupabase, supabaseEnabled } from './services/frequencyService';
 import { ICONS, WORKSHOP_COLORS, WORKSHOP_COLOR_MAP, AGE_CLASSIFICATIONS, PHYSICAL_FILE_LOCATIONS } from './constants';
 import { syncWithMcp } from './services/mcpService';
@@ -391,7 +392,7 @@ const Button: React.FC<{
   };
 
   return (
-    <button onClick={onClick} className={`${baseClasses} ${variantClasses[variant]} ${className}`} title={title} disabled={disabled} type={type}>
+    <button onClick={onClick} className={`${baseClasses} ${variantClasses[variant]} ${className}`} title={title} disabled={disabled} type={type as 'button' | 'reset' | 'submit'}>
       {children}
     </button>
   );
@@ -4518,9 +4519,19 @@ const AppContent = () => {
                                 Gestor Mais Infância
                             </h1>
                         </div>
-                        <div className="text-right">
-                            <p className="font-semibold text-lg text-indigo-700">{currentTime.toLocaleTimeString('pt-BR')}</p>
-                            <p className="text-sm text-gray-500">{currentTime.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                        <div className="flex items-center space-x-3">
+                            <div className="text-right">
+                                <p className="font-semibold text-lg text-indigo-700">{currentTime.toLocaleTimeString('pt-BR')}</p>
+                                <p className="text-sm text-gray-500">{currentTime.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                            </div>
+                            <button
+                                onClick={handleHeaderLogout}
+                                className="ml-2 px-3 py-2 rounded-md bg-slate-700 text-white hover:bg-slate-800 text-sm font-semibold"
+                                aria-label="Sair"
+                                title="Sair"
+                            >
+                                Sair
+                            </button>
                         </div>
                     </div>
                     <div className="border-t border-gray-200">
@@ -4646,3 +4657,13 @@ const App = () => (
 );
 
 export default App;
+    const handleHeaderLogout = async () => {
+        try {
+            if (isSupabaseConfigured && supabase) {
+                await supabase.auth.signOut();
+            }
+            localStorage.removeItem('auth_gate_ok');
+        } finally {
+            window.location.reload();
+        }
+    };
